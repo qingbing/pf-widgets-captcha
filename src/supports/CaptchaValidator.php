@@ -33,26 +33,10 @@ class CaptchaValidator extends Validator
             $this->validateEmpty($object, $attribute);
             return;
         }
-        $captcha = $this->getCaptchaAction();
+
+        $captcha = \Captcha::getCaptchaAction($this->captchaAction);
         if (is_array($value) || !$captcha->validate($value, $this->caseSensitive)) {
             $this->addError($object, $attribute, $this->message);
         }
-    }
-
-    /**
-     * 返回验证码所在的"action"
-     * @return \Abstracts\Action|\Captcha
-     * @throws \Exception
-     */
-    protected function getCaptchaAction()
-    {
-        list($controller, $actionID) = \PF::app()->createController(trim($this->captchaAction, '/'));
-        /* @var \Render\Abstracts\Controller $controller */
-        if (null === $action = $controller->createAction($actionID)) {
-            throw new Exception(str_cover('\CaptchaSupports\CaptchaValidator.action"{id}"无效，无法找到指定的action', [
-                '{id}' => $this->captchaAction
-            ]), 102300101);
-        }
-        return $action;
     }
 }

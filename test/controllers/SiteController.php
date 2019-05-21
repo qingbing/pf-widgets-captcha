@@ -49,4 +49,13 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
+
+    /**
+     * test 清理验证session
+     * @throws \Exception
+     */
+    public function actionDestroy()
+    {
+        \Captcha::getCaptchaAction('site/captcha')->destroy();
+    }
 }

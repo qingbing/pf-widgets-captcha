@@ -106,7 +106,7 @@ class Captcha extends Action
      */
     protected function getSessionKey()
     {
-        return implode('.', [$this->keyPrefix, $this->getController()->getId(), $this->getId()]);
+        return implode('.', [$this->keyPrefix, $this->getController()->getRoute(), $this->getId()]);
     }
 
     /**
@@ -205,25 +205,63 @@ class Captcha extends Action
     }
 
     /**
+     * 返回验证码所在的"action"
+     * @return \Abstracts\Action|\Captcha
+     * @throws \Exception
+     */
+    public static function getCaptchaAction($captchaAction)
+    {
+        list($controller, $actionID) = \PF::app()->createController(trim($captchaAction, '/'));
+        /* @var \Render\Abstracts\Controller $controller */
+        if (null === $action = $controller->createAction($actionID)) {
+            throw new Exception(str_cover('\CaptchaSupports\CaptchaValidator.action"{id}"无效，无法找到指定的action', [
+                '{id}' => $captchaAction
+            ]), 102300101);
+        }
+        return $action;
+    }
+
+    /**
      * 验证码的model对比验证
      * @param string $input user input
-     * @param bool $caseSensitive
+     * @param bool $caseSensitive , 是否区别大小写
+     * @param bool $reduceCount , 是否减少验证次数
      * @return bool
      * @throws \Exception
      */
-    public function validate($input, $caseSensitive)
+    public function validate($input, $caseSensitive = false, $reduceCount = true)
     {
         $code = $this->getVerifyCode();
         $valid = $caseSensitive ? ($input === $code) : strcasecmp($input, $code) === 0;
+
+        if ($reduceCount) {
+            // 减少次数主要用于最终的模型检查，不减少主要用于页面的ajax检查
+            $session = $this->getController()->getApp()->getSession();
+            /* @var $session \Components\Session */
+            $session->open();
+            $name = $this->getSessionKey();
+            $countKey = $name . '.count';
+            $session->set($countKey, $session->get($countKey) + 1);
+            if ($session->get($countKey) > $this->testLimit && $this->testLimit > 0) {
+                $session->set($name, null);
+            }
+        }
+
+        return $valid;
+    }
+
+    /**
+     * 销毁该链接的验证码
+     * @throws \Helper\Exception
+     */
+    public function destroy()
+    {
         $session = $this->getController()->getApp()->getSession();
         /* @var $session \Components\Session */
         $session->open();
         $name = $this->getSessionKey();
         $countKey = $name . '.count';
-        $session->set($countKey, $session->get($countKey) + 1);
-        if ($session->get($countKey) > $this->testLimit && $this->testLimit > 0) {
-            $session->set($name, null);
-        }
-        return $valid;
+        $session->set($countKey, null);
+        $session->set($name, null);
     }
 }

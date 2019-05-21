@@ -42,6 +42,9 @@
             'name' => 'submit',
         ]); ?></dd>
 </dl>
+<dl>
+    <dd><a href="<?php echo $this->createurl('destroy'); ?>" target="_blank">销毁session</a></dd>
+</dl>
 <?php echo \Html::endForm(); ?>
 </body>
 </html>
