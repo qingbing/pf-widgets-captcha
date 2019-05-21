@@ -254,7 +254,7 @@ class Captcha extends Action
      * 销毁该链接的验证码
      * @throws \Helper\Exception
      */
-    public function destroy()
+    public function destroyState()
     {
         $session = $this->getController()->getApp()->getSession();
         /* @var $session \Components\Session */

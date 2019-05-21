@@ -56,6 +56,6 @@ class SiteController extends Controller
      */
     public function actionDestroy()
     {
-        \Captcha::getCaptchaAction('site/captcha')->destroy();
+        \Captcha::getCaptchaAction('site/captcha')->destroyState();
     }
 }
